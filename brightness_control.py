@@ -362,6 +362,9 @@ class BrightnessControlApp:
         else:
             self.window.show_all()
             self.window.present()
+            # Bring window to front
+            self.window.set_keep_above(True)
+            GLib.timeout_add(100, lambda: self.window.set_keep_above(False))
     
     def on_window_delete(self, widget, event):
         """Handle window close event."""
@@ -386,12 +389,27 @@ class BrightnessControlApp:
         dialog.run()
         dialog.destroy()
     
-    def run(self):
-        """Run the application."""
-        # Show window when launched
-        # If status icon is available, it will also be shown
-        self.window.show_all()
-        self.window.present()
+    def run(self, show_window=False):
+        """Run the application.
+        
+        Args:
+            show_window: If True, show the window on startup. If False, start hidden.
+        """
+        if show_window:
+            # Show window when launched from desktop/panel
+            # Realize the window first to ensure it's ready
+            if not self.window.get_realized():
+                self.window.realize()
+            self.window.show_all()
+            self.window.present()
+            # Force window to front and ensure it's visible
+            self.window.set_keep_above(True)
+            GLib.timeout_add(300, lambda: self.window.set_keep_above(False))
+            # Ensure window is actually visible
+            GLib.timeout_add(100, lambda: self.window.show_all() or True)
+        else:
+            # Start hidden - window will only show when status icon is clicked
+            self.window.hide()
         Gtk.main()
 
 
@@ -427,13 +445,38 @@ Examples:
         type=float,
         help='Brightness value (0-100) when using "set" action'
     )
+    parser.add_argument(
+        '--service',
+        action='store_true',
+        help='Run as background service (hide GUI on startup)'
+    )
     
     args = parser.parse_args()
     
     # If no arguments, launch GUI
     if args.action is None:
+        # Check if service is already running
+        if not args.service:
+            import subprocess
+            try:
+                # Check if service is active
+                result = subprocess.run(
+                    ['systemctl', '--user', 'is-active', 'brightness-control.service'],
+                    capture_output=True,
+                    timeout=1
+                )
+                if result.returncode == 0:
+                    # Service is running, try to show its window via dbus or just launch new instance
+                    # For now, we'll launch a new instance that shows the window
+                    pass
+            except Exception:
+                pass
+        
         app = BrightnessControlApp()
-        app.run()
+        # If --service flag is set, start hidden (for systemd service)
+        # Otherwise, show window (for desktop/panel launch)
+        show_on_start = not args.service
+        app.run(show_window=show_on_start)
         return
     
     # Otherwise, use CLI mode

@@ -60,3 +60,4 @@ If the panel icon doesn't work, you can always access it via:
 
 The app functionality is working correctly, it's just the panel integration that needs troubleshooting.
 
+

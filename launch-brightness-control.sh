@@ -10,3 +10,4 @@ cd /home/pi/brightness-control
 # Launch the application
 exec /home/pi/brightness-control/brightness_control.py "$@"
 
+

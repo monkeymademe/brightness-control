@@ -6,7 +6,8 @@ After=graphical.target
 Type=simple
 Environment=DISPLAY=:0
 Environment=XAUTHORITY=%h/.Xauthority
-ExecStart=/usr/bin/python3 %h/brightness-control/brightness_control.py
+Environment=BRIGHTNESS_SERVICE_MODE=1
+ExecStart=/usr/bin/python3 %h/brightness-control/brightness_control.py --service
 Restart=on-failure
 RestartSec=5
 
