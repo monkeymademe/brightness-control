@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Brightness Control
+Comment=Control touchscreen backlight brightness
+Exec=/home/pi/brightness-control/launch-brightness-control.sh
+Icon=video-display
+Terminal=false
+Categories=System;
+StartupNotify=true
+NoDisplay=false
+
+
+

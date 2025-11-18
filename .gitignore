@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Backup files
+*.backup
+*.bak
+*.swp
+*~
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# User-specific config (don't commit user's panel config backups)
+*.backup.*
+panel.backup.*
+
+# Temporary files
+*.tmp
+*.log
+

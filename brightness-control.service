@@ -1,0 +1,15 @@
+[Unit]
+Description=Brightness Control Widget for Raspberry Pi Touchscreen
+After=graphical.target
+
+[Service]
+Type=simple
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=%h/.Xauthority
+ExecStart=/usr/bin/python3 %h/brightness-control/brightness_control.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+
