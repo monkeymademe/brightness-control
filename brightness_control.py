@@ -499,6 +499,45 @@ Examples:
             # Turn backlight off
             if controller.turn_backlight_off():
                 print("Backlight turned off")
+                # Ensure the service is running for double-tap detection
+                import subprocess
+                try:
+                    # Always try to ensure service is running
+                    result = subprocess.run(
+                        ['systemctl', '--user', 'is-active', 'brightness-control.service'],
+                        capture_output=True,
+                        text=True,
+                        timeout=2
+                    )
+                    if result.returncode != 0:
+                        # Service not active, start it
+                        print("Starting background service for double-tap wake...")
+                        start_result = subprocess.run(
+                            ['systemctl', '--user', 'start', 'brightness-control.service'],
+                            capture_output=True,
+                            text=True,
+                            timeout=5
+                        )
+                        if start_result.returncode == 0:
+                            print("Service started. Double-tap the screen to wake it.")
+                        else:
+                            # Fallback: check if any process is running
+                            pgrep_result = subprocess.run(
+                                ['pgrep', '-f', 'brightness_control.py'],
+                                capture_output=True,
+                                timeout=2
+                            )
+                            if pgrep_result.returncode == 0:
+                                print("Note: A brightness-control process is running. Double-tap should work.")
+                            else:
+                                print("Warning: Could not start service. Double-tap wake may not work.")
+                                print("         Start manually with: systemctl --user start brightness-control.service")
+                    else:
+                        print("Double-tap detection is active. Double-tap the screen to wake it.")
+                except Exception as e:
+                    # If we can't check/start service, at least warn user
+                    print("Note: For double-tap wake to work, ensure the brightness-control service is running.")
+                    print("      Start it with: systemctl --user start brightness-control.service")
             else:
                 print("Error: Failed to turn backlight off", file=sys.stderr)
                 sys.exit(1)
