@@ -190,10 +190,11 @@ class DoubleTapDetector:
 class BrightnessControlWindow(Gtk.Window):
     """Main GUI window for brightness control."""
     
-    def __init__(self, backlight_controller, double_tap_detector):
+    def __init__(self, backlight_controller, double_tap_detector, app):
         super().__init__(title="Brightness Control")
         self.backlight_controller = backlight_controller
         self.double_tap_detector = double_tap_detector
+        self.app = app  # Reference to parent app
         self.updating = False
         
         self.set_default_size(300, 200)
@@ -233,7 +234,7 @@ class BrightnessControlWindow(Gtk.Window):
         
         # Close button
         close_button = Gtk.Button(label="Close")
-        close_button.connect("clicked", lambda w: self.hide())
+        close_button.connect("clicked", self.on_close_button_clicked)
         vbox.pack_start(close_button, False, False, 0)
         
         # Update brightness display periodically
@@ -286,6 +287,15 @@ class BrightnessControlWindow(Gtk.Window):
         
         return True
     
+    def on_close_button_clicked(self, widget):
+        """Handle close button click."""
+        if self.app and self.app.is_service:
+            # If running as service, just hide the window
+            self.hide()
+        else:
+            # If standalone instance, quit the application
+            Gtk.main_quit()
+    
     def on_double_tap(self):
         """Handle double-tap wake event."""
         self.backlight_controller.restore_brightness()
@@ -296,11 +306,12 @@ class BrightnessControlWindow(Gtk.Window):
 class BrightnessControlApp:
     """Main application class."""
     
-    def __init__(self):
+    def __init__(self, is_service=False):
         self.backlight_controller = None
         self.double_tap_detector = None
         self.window = None
         self.status_icon = None
+        self.is_service = is_service  # Track if running as service
         
         try:
             self.backlight_controller = BacklightController()
@@ -317,7 +328,8 @@ class BrightnessControlApp:
         # Create main window
         self.window = BrightnessControlWindow(
             self.backlight_controller,
-            self.double_tap_detector
+            self.double_tap_detector,
+            self
         )
         self.window.connect("delete-event", self.on_window_delete)
         
@@ -368,8 +380,14 @@ class BrightnessControlApp:
     
     def on_window_delete(self, widget, event):
         """Handle window close event."""
-        widget.hide()
-        return True  # Prevent window destruction
+        if self.is_service:
+            # If running as service, just hide the window
+            widget.hide()
+            return True  # Prevent window destruction
+        else:
+            # If standalone instance, quit the application
+            Gtk.main_quit()
+            return False  # Allow window destruction
     
     def on_double_tap(self):
         """Handle double-tap wake event."""
@@ -472,7 +490,7 @@ Examples:
             except Exception:
                 pass
         
-        app = BrightnessControlApp()
+        app = BrightnessControlApp(is_service=args.service)
         # If --service flag is set, start hidden (for systemd service)
         # Otherwise, show window (for desktop/panel launch)
         show_on_start = not args.service
