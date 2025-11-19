@@ -2,8 +2,6 @@
 
 A brightness control widget for the official Raspberry Pi 5-inch touch screen, designed for Raspberry Pi OS Bookworm and Trixie.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
 ## Features
 
 - **Brightness Slider**: Adjust backlight brightness from 0-100%
